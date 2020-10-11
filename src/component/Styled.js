@@ -16,6 +16,8 @@ export const NameWrapper = styled.div`
       align-items: center;
       padding: 0 20px;
       position: relative;
+      transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
       &:before {
         content: "";
         position: absolute;
@@ -32,6 +34,14 @@ export const NameWrapper = styled.div`
       &:focus-within {
         &:before {
           transform: scaleX(1);
+        }
+      }
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 6px rgba(55, 55, 55, 0.05);
+        > button {
+          transform: translateX(0);
+          opacity: 1;
         }
       }
       &:not(:last-child) {
@@ -52,6 +62,20 @@ export const NameWrapper = styled.div`
           color: currentColor;
           position: relative;
         }
+      }
+      > button {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 50px;
+        background: #f50057;
+        outline: none;
+        border: 0;
+        color: #fff;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
       }
     }
   }
