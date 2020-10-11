@@ -6,7 +6,7 @@ import Colors from "../Colors";
 import { withRouter } from "react-router";
 import { useHistory } from "react-router";
 import queryString from "querystring";
-import { convertFromBase64, convertToBase64 } from "./utils";
+import { convertFromBase64, convertToBase64, isEmpty } from "./utils";
 
 function InsertName() {
   const history = useHistory();
@@ -26,9 +26,9 @@ function InsertName() {
 
   useEffect(() => {
     const qs = queryString.parse(window.location.search);
-    if (qs) {
-      const name = convertFromBase64(qs["?n"]);
-      const list = convertFromBase64(qs["l"]);
+    if (!isEmpty(qs)) {
+      const name = qs["?n"] && convertFromBase64(qs["?n"]);
+      const list = qs["l"] && convertFromBase64(qs["l"]);
       setName(JSON.parse(name));
       setList(JSON.parse(list));
     }
