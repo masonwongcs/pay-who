@@ -1,10 +1,15 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { NameWrapper } from "./Styled";
-import { FaUserAlt, FaTrash } from "react-icons/fa";
+import { NameWrapper, ReceiptWrapper } from "./Styled";
+import { FaPlusSquare, FaTrash } from "react-icons/fa";
 import Colors from "../Colors";
+import { withRouter } from "react-router";
+import { useHistory } from "react-router";
+import queryString from "querystring";
+import { convertFromBase64, convertToBase64 } from "./utils";
 
 function InsertName() {
+  const history = useHistory();
   const [name, setName] = useState([""]);
   const [list, setList] = useState([
     {
@@ -18,6 +23,23 @@ function InsertName() {
   useEffect(() => {
     calculateAverage();
   }, [name]);
+
+  useEffect(() => {
+    const qs = queryString.parse(window.location.search);
+    const name = convertFromBase64(qs["?n"]);
+    const list = convertFromBase64(qs["l"]);
+    setName(JSON.parse(name));
+    setList(JSON.parse(list));
+  }, []);
+
+  useEffect(() => {
+    history.push({
+      pathname: "",
+      search: `?n=${convertToBase64(JSON.stringify(name))}&l=${convertToBase64(
+        JSON.stringify(list)
+      )}`,
+    });
+  }, [name, list]);
 
   const addNewInput = (set, value, valueToBeAdded) => () => {
     set([...value, valueToBeAdded ? valueToBeAdded : ""]);
@@ -65,6 +87,7 @@ function InsertName() {
 
   const handleNameChange = (index) => (e) => {
     const { value } = e.target;
+
     const newValue = [...name];
     newValue[index] = value;
     setName(newValue);
@@ -85,7 +108,7 @@ function InsertName() {
   return (
     <div>
       <NameWrapper>
-        <h3>Insert the names</h3>
+        <h3>Who is sharing</h3>
         <ul>
           {name.map((item, index) => (
             <li key={`name-${index}`} style={{ color: Colors[index] }}>
@@ -103,65 +126,110 @@ function InsertName() {
             </li>
           ))}
         </ul>
-        <button onClick={addNewInput(setName, name)}>Add new name</button>
+        <button className="add-btn" onClick={addNewInput(setName, name)}>
+          Add new new person
+        </button>
       </NameWrapper>
 
-      <h3>Insert insert the list</h3>
-      <ul>
-        {list.map((item, index) => {
-          const { name, value, average, shared } = item;
-          const uncheckIndex = index;
-          return (
-            <li key={`list-${index}`}>
-              <div>
-                <input
-                  value={name}
-                  type="text"
-                  onChange={handleListItemChange(index, "name")}
-                />
-                <input
-                  value={value}
-                  type="number"
-                  onChange={handleListItemChange(index, "value")}
-                />
-                <button onClick={handleRemove(index, setList, list)}>
-                  remove
+      <ReceiptWrapper>
+        <h3 className="title">Receipt</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ITEM</th>
+              <th className="center">TOTAL</th>
+              <th className="shared">SHARED</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((item, index) => {
+              const { name, value, average, shared } = item;
+              const uncheckIndex = index;
+              return (
+                <>
+                  <tr key={`list-${index}`}>
+                    <td>
+                      <input
+                        value={name}
+                        type="text"
+                        onChange={handleListItemChange(index, "name")}
+                      />
+                    </td>
+                    <td className="center">
+                      <input
+                        value={value}
+                        type="number"
+                        onChange={handleListItemChange(index, "value")}
+                      />
+                      <button
+                        className="delete"
+                        onClick={handleRemove(index, setList, list)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                    <td className="shared">
+                      <span className="total">
+                        {`(${value} / ${shared.length})\n = ${average}`}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr className="shared-row">
+                    <td colSpan={3}>
+                      <div className="share-list">
+                        {shared.map((item, index) => {
+                          const { name, isShared } = item;
+                          return (
+                            <span
+                              className={`share-item ${
+                                isShared ? "" : "disabled"
+                              }`}
+                              key={`shared-${index}`}
+                              style={{
+                                color: Colors[index],
+                              }}
+                              onClick={uncheckName(name, uncheckIndex)}
+                            >
+                              {name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                </>
+              );
+            })}
+            <tr>
+              <td colSpan={3}>
+                <button
+                  className="add-new-item"
+                  onClick={addNewInput(setList, list, {
+                    name: "",
+                    value: 0,
+                    average: 0,
+                    shared: mapNameToValue(),
+                  })}
+                >
+                  <FaPlusSquare /> Add new item
                 </button>
-                <span>{average}</span>
-              </div>
-              <div>
-                {shared.map((item, index) => {
-                  const { name, isShared } = item;
-                  return (
-                    <span
-                      key={`shared-${index}`}
-                      style={{
-                        color: isShared ? "#000" : "red",
-                        marginRight: 10,
-                      }}
-                      onClick={uncheckName(name, uncheckIndex)}
-                    >
-                      {name}
-                    </span>
-                  );
-                })}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      <button
-        onClick={addNewInput(setList, list, {
-          name: "",
-          value: 0,
-          average: 0,
-          shared: mapNameToValue(),
-        })}
-      >
-        Add new item
-      </button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={2}>Total amount</td>
+              <td>
+                {list.reduce((acc, item) => {
+                  return acc + Number(item.value);
+                }, 0)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </ReceiptWrapper>
     </div>
   );
 }
 
-export default InsertName;
+export default withRouter(InsertName);
