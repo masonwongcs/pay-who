@@ -19,51 +19,58 @@ function InsertName() {
     calculateAverage();
   }, [name]);
 
-  const addNewInput = (set, value, valueToBeAdded) => {
+  const addNewInput = (set, value, valueToBeAdded) => () => {
     set([...value, valueToBeAdded ? valueToBeAdded : ""]);
   };
 
   const calculateAverage = () => {
-    const tmpList = [...list];
-    console.log(tmpList);
-    tmpList.forEach((item) => {
-      const { value } = item;
-      const totalShared = name.length;
-      item.average = (Number(value) / totalShared).toFixed(2);
-      item.shared = mapNameToValue();
-    });
-    setList(tmpList);
+    setList((oldList) =>
+      oldList.map((item) => {
+        const { value } = item;
+        const totalShared = name.length;
+        return {
+          ...item,
+          average: (Number(value) / totalShared).toFixed(2),
+          shared: mapNameToValue(),
+        };
+      })
+    );
   };
 
   const mapNameToValue = () => {
     return name.map((item) => ({ name: item, isShared: true }));
   };
 
-  const uncheckName = (name, uncheckIndex) => {
-    const tmpList = [...list];
-    tmpList.forEach((item, index) => {
-      const { value, shared } = item;
-      if (uncheckIndex === index) {
-        shared.forEach((item) =>
-          item.name === name ? (item.isShared = !item.isShared) : item.isShared
-        );
-        const sharedList = shared.filter((item) => item.isShared);
-        const totalShared = sharedList.length === 0 ? 1 : sharedList.length;
-        item.average = (Number(value) / totalShared).toFixed(2);
-        item.shared = shared;
-      }
-    });
-    setList(tmpList);
+  const uncheckName = (name, uncheckIndex) => () => {
+    setList((oldList) =>
+      oldList.map((item, index) => {
+        const { value } = item;
+        if (uncheckIndex === index) {
+          const shared = item.shared.map((s) => ({
+            ...s,
+            isShared: s.name === name ? !s.isShared : s.isShared,
+          }));
+          const sharedList = shared.filter((item) => item.isShared);
+          const totalShared = sharedList.length === 0 ? 1 : sharedList.length;
+          return {
+            ...item,
+            shared,
+            average: (Number(value) / totalShared).toFixed(2),
+          };
+        }
+        return item;
+      })
+    );
   };
 
-  const handleNameChange = (e, index) => {
+  const handleNameChange = (index) => (e) => {
     const { value } = e.target;
     const newValue = [...name];
     newValue[index] = value;
     setName(newValue);
   };
 
-  const handleListItemChange = (e, index, inputName) => {
+  const handleListItemChange = (index, inputName) => (e) => {
     const { value } = e.target;
     const newValue = [...list];
     newValue[index][inputName] = value;
@@ -71,7 +78,7 @@ function InsertName() {
     calculateAverage();
   };
 
-  const handleRemove = (indexToRemove, set, target) => {
+  const handleRemove = (indexToRemove, set, target) => () => {
     set(target.filter((item, index) => index !== indexToRemove));
   };
 
@@ -84,19 +91,19 @@ function InsertName() {
             <li key={`name-${index}`} style={{ color: Colors[index] }}>
               {/*<FaUserAlt />*/}
               <div className="input-wrapper">
-                <input
-                  value={item}
-                  onChange={(e) => handleNameChange(e, index)}
-                />
+                <input value={item} onChange={handleNameChange(index)} />
               </div>
 
-              <button onClick={() => handleRemove(index, setName, name)} tabIndex={-1}>
+              <button
+                onClick={handleRemove(index, setName, name)}
+                tabIndex={-1}
+              >
                 <FaTrash />
               </button>
             </li>
           ))}
         </ul>
-        <button onClick={() => addNewInput(setName, name)}>Add new name</button>
+        <button onClick={addNewInput(setName, name)}>Add new name</button>
       </NameWrapper>
 
       <h3>Insert insert the list</h3>
@@ -110,28 +117,29 @@ function InsertName() {
                 <input
                   value={name}
                   type="text"
-                  onChange={(e) => handleListItemChange(e, index, "name")}
+                  onChange={handleListItemChange(index, "name")}
                 />
                 <input
                   value={value}
                   type="number"
-                  onChange={(e) => handleListItemChange(e, index, "value")}
+                  onChange={handleListItemChange(index, "value")}
                 />
-                <button onClick={() => handleRemove(index, setList, list)}>
+                <button onClick={handleRemove(index, setList, list)}>
                   remove
                 </button>
                 <span>{average}</span>
               </div>
               <div>
-                {shared.map((item) => {
+                {shared.map((item, index) => {
                   const { name, isShared } = item;
                   return (
                     <span
+                      key={`shared-${index}`}
                       style={{
                         color: isShared ? "#000" : "red",
                         marginRight: 10,
                       }}
-                      onClick={() => uncheckName(name, uncheckIndex)}
+                      onClick={uncheckName(name, uncheckIndex)}
                     >
                       {name}
                     </span>
@@ -143,14 +151,12 @@ function InsertName() {
         })}
       </ul>
       <button
-        onClick={() =>
-          addNewInput(setList, list, {
-            name: "",
-            value: 0,
-            average: 0,
-            shared: mapNameToValue(),
-          })
-        }
+        onClick={addNewInput(setList, list, {
+          name: "",
+          value: 0,
+          average: 0,
+          shared: mapNameToValue(),
+        })}
       >
         Add new item
       </button>
