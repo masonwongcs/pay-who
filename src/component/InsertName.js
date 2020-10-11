@@ -26,10 +26,12 @@ function InsertName() {
 
   useEffect(() => {
     const qs = queryString.parse(window.location.search);
-    const name = convertFromBase64(qs["?n"]);
-    const list = convertFromBase64(qs["l"]);
-    setName(JSON.parse(name));
-    setList(JSON.parse(list));
+    if (qs) {
+      const name = convertFromBase64(qs["?n"]);
+      const list = convertFromBase64(qs["l"]);
+      setName(JSON.parse(name));
+      setList(JSON.parse(list));
+    }
   }, []);
 
   useEffect(() => {
