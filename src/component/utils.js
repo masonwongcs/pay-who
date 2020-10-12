@@ -1,19 +1,20 @@
 export const convertToBase64 = (string) => {
-  return btoa(string)
-}
+  return btoa(string);
+};
 
 export const convertFromBase64 = (string) => {
-  return atob(string)
-}
+  return atob(string);
+};
 
 export const isEmpty = (obj) => {
-  for(let key in obj) {
-    if(obj.hasOwnProperty(key))
-      return false;
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) return false;
   }
   return true;
-}
+};
 
-export const injectToSearch = ()=> {
+export const injectToSearch = () => {};
 
-}
+export const addNewInput = (set, value, valueToBeAdded) => () => {
+  set([...value, valueToBeAdded ? valueToBeAdded : ""]);
+};
